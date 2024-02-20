@@ -1,52 +1,34 @@
-from telegram.ext import CommandHandler,MessageHandler,Application,filters,ContextTypes
-from telegram import ForceReply,Update
 
-import logging
-import httpx
-from dotenv import load_dotenv
-import os
+from telegram.ext import ContextTypes, CommandHandler,Application
+from telegram import Update
+from os import getenv
+from requests import get
 
-load_dotenv()
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_html(rf"Hello {update.message.from_user}!")
 
+def kanyeQuotes() -> str:
+    url = get("https://api.kanye.rest")
+    if url.status_code == 200:
+        data = url.json()
+        return data["quote"]
+    else:
+        return "Please try again"
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
+async def kanye(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(kanyeQuotes())
 
-logging.getLogger("httpx").setLevel(logging.WARNING)
+async def main() -> None:
+    application = Application.builder().token(getenv("TOKEN")).build()
 
-logger = logging.getLogger(__name__)
-TOKEN = os.getenv("TOKEN")
-
-async def start(update:Update,context:ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    await update.message.reply_html(
-        rf"Hi {user.mention_html()}",
-        reply_markup= ForceReply(selective=True),
-    )
-
-async def kanye_quotes() -> str:
-    async with httpx.AsyncClient() as client:
-        response = await client.get("https://api.kanye.rest/")
-        if response.status_code == 200:
-            data = response.json()
-            return data["quote"]
-        else:
-            return "Please try again."
-        
-async def kanye(update:Update,context : ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(await kanye_quotes())
-
-async def help(update:Update,context:ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Contact @lordmhri")
-
-def main() -> None:
-    application = Application.builder().token(TOKEN).build()
-    application.add_handler(CommandHandler("start",start))
+    application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("kanye", kanye))
-    application.add_handler(CommandHandler("help",help))
 
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    await application.bot.set_webhook(url=getenv("WEBHOOK_URL"))
+
+    async with application:
+        await application.run_until_shutdown()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
