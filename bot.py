@@ -37,10 +37,14 @@ async def kanye_quotes() -> str:
 async def kanye(update:Update,context : ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(await kanye_quotes())
 
+async def help(update:Update,context:ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Contact @lordmhri")
+
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start",start))
     application.add_handler(CommandHandler("kanye", kanye))
+    application.add_handler(CommandHandler("help",help))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
