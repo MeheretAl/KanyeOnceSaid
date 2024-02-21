@@ -7,7 +7,7 @@ from requests import get
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     await update.message.reply_html(
-        rf"Hello {user.mention_html()}!\n /kanye to get kanye quotes /n /help for assistance")
+        rf"Hello {user.mention_html()}!")
 
 
 async def helpCommand(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
