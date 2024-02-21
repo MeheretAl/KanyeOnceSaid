@@ -1,11 +1,18 @@
-
-from telegram.ext import ContextTypes, CommandHandler,Application
 from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 from os import getenv
 from requests import get
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_html(rf"Hello {update.message.from_user}!")
+    user = update.effective_user
+    await update.message.reply_html(
+        rf"Hello {user.mention_html()}!\n /kanye to get kanye quotes /n /help for assistance")
+
+
+async def helpCommand(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Contact @lordmhri for assistance")
+
 
 def kanyeQuotes() -> str:
     url = get("https://api.kanye.rest")
@@ -15,20 +22,20 @@ def kanyeQuotes() -> str:
     else:
         return "Please try again"
 
+
 async def kanye(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(kanyeQuotes())
 
-async def main() -> None:
+
+def main() -> None:
     application = Application.builder().token(getenv("TOKEN")).build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", helpCommand))
     application.add_handler(CommandHandler("kanye", kanye))
 
-    await application.bot.set_webhook(url=getenv("WEBHOOK_URL"))
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-    async with application:
-        await application.run_until_shutdown()
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
